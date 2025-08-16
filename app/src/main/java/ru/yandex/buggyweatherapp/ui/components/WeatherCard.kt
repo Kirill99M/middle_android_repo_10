@@ -1,6 +1,5 @@
 package ru.yandex.buggyweatherapp.ui.components
 
-import android.widget.ImageView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,38 +8,29 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import ru.yandex.buggyweatherapp.model.WeatherData
-import ru.yandex.buggyweatherapp.utils.ImageLoader
-import ru.yandex.buggyweatherapp.utils.WeatherIconMapper
+import coil.compose.AsyncImage
+import ru.yandex.buggyweatherapp.R
+import ru.yandex.buggyweatherapp.viewmodel.models.UiState
 
 @Composable
-fun DetailedWeatherCard(weather: WeatherData) {
-    val context = LocalContext.current
-    
-    
-    val imageView = remember { ImageView(context) }
-    
+fun WeatherCard(
+    state: UiState.Success,
+    onRefreshClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -50,102 +40,85 @@ fun DetailedWeatherCard(weather: WeatherData) {
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = weather.cityName,
-                    style = MaterialTheme.typography.headlineMedium
-                )
-                
-                IconButton(onClick = { /* No-op, should use ViewModel */ }) {
-                    Icon(
-                        imageVector = if (weather.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "Favorite"
-                    )
-                }
-            }
+            Text(
+                text = state.cityName,
+                style = MaterialTheme.typography.headlineMedium
+            )
             
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(vertical = 8.dp)
             ) {
-                
-                AndroidView(
-                    factory = { imageView },
+                AsyncImage(
+                    model = state.iconUri,
+                    contentDescription = stringResource(R.string.weather_condition_image),
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier.size(50.dp)
-                ) {
-                    
-                    val iconUrl = "https://openweathermap.org/img/wn/${weather.icon}@2x.png"
-                    ImageLoader.loadInto(iconUrl, it)
-                }
-                
+                )
                 
                 Text(
-                    text = weather.temperature.toString() + "°C",
+                    text = stringResource(R.string.temperature, state.temperature),
                     style = MaterialTheme.typography.headlineLarge
                 )
             }
-            
+
             Text(
-                text = weather.description.replaceFirstChar { it.uppercase() },
-                style = MaterialTheme.typography.bodyLarge
+                text = stringResource(R.string.feels_like, state.feelsLike),
+                style = MaterialTheme.typography.bodyMedium
             )
-            
+
+            Text(
+                text = stringResource(
+                    R.string.min_max,
+                    state.minTemperature, state.maxTemperature
+                ),
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = stringResource(
+                    R.string.description,
+                    state.description.replaceFirstChar { it.uppercase() }
+                ),
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = stringResource(R.string.humidity, state.humidity),
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = stringResource(R.string.wind, state.wind),
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+
+                Text(
+                    text = stringResource(R.string.sunrise, state.sunriseTimestamp),
+                    style = MaterialTheme.typography.bodySmall
+                )
+
+                Text(
+                    text = stringResource(R.string.sunset, state.sunsetTimestamp),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
-            
-            
-            LazyColumn {
-                item {
-                    WeatherDataRow("Feels like", weather.feelsLike.toString() + "°C")
-                }
-                item {
-                    WeatherDataRow("Min/Max", "${weather.minTemp}°C / ${weather.maxTemp}°C")
-                }
-                item {
-                    WeatherDataRow("Humidity", weather.humidity.toString() + "%")
-                }
-                item {
-                    WeatherDataRow("Pressure", weather.pressure.toString() + " hPa")
-                }
-                item {
-                    WeatherDataRow("Wind", weather.windSpeed.toString() + " m/s")
-                }
-                item {
-                    WeatherDataRow("Sunrise", WeatherIconMapper.formatTimestamp(weather.sunriseTime))
-                }
-                item {
-                    WeatherDataRow("Sunset", WeatherIconMapper.formatTimestamp(weather.sunsetTime))
-                }
+
+            Button(
+                onClick = onRefreshClick,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Text(stringResource(R.string.refresh))
             }
         }
-    }
-    
-    
-    DisposableEffect(weather.icon) {
-        val iconUrl = "https://openweathermap.org/img/wn/${weather.icon}@2x.png"
-        
-        
-        val bitmap = ImageLoader.loadImageSync(iconUrl)
-        imageView.setImageBitmap(bitmap)
-        
-        onDispose {
-            
-        }
-    }
-}
-
-@Composable
-private fun WeatherDataRow(label: String, value: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(text = label, style = MaterialTheme.typography.bodyMedium)
-        Text(text = value, style = MaterialTheme.typography.bodyMedium)
     }
 }

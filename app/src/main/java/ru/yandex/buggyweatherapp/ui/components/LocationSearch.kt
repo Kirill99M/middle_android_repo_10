@@ -19,78 +19,71 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import ru.yandex.buggyweatherapp.api.RetrofitInstance
-import ru.yandex.buggyweatherapp.repository.LocationRepository
-import ru.yandex.buggyweatherapp.repository.WeatherRepository
+import ru.yandex.buggyweatherapp.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationSearch(
     onCitySearch: (String) -> Unit,
-    onLocationRequest: () -> Unit
+    onLocationRequest: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     var searchText by remember { mutableStateOf("") }
-    
-    Column(modifier = Modifier.fillMaxWidth()) {
+
+    Column(modifier = modifier.fillMaxWidth()) {
         OutlinedTextField(
             value = searchText,
             onValueChange = { searchText = it },
-            label = { Text("Search city") },
+            label = {
+                Text(text = stringResource(R.string.search_city))
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             leadingIcon = {
-                IconButton(onClick = { onLocationRequest() }) {
-                    Icon(Icons.Default.LocationOn, contentDescription = "Get current location")
+                IconButton(
+                    onClick = {
+                        onLocationRequest()
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = stringResource(R.string.get_current_location)
+                    )
                 }
             },
             trailingIcon = {
-                IconButton(onClick = { 
-                    if (searchText.isNotBlank()) {
+                IconButton(
+                    onClick = {
                         onCitySearch(searchText)
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
                     }
-                }) {
-                    Icon(Icons.Default.Search, contentDescription = "Search")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = stringResource(R.string.search)
+                    )
                 }
             },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = { 
-                if (searchText.isNotBlank()) {
+            keyboardActions = KeyboardActions(
+                onSearch = {
                     onCitySearch(searchText)
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
                 }
-            })
+            )
         )
     }
-}
-
-@Composable
-fun LocationSearchWithDirectApiCall() {
-    val context = LocalContext.current
-    var searchText by remember { mutableStateOf("") }
-    
-    
-    val weatherRepository = WeatherRepository()
-    val locationRepository = LocationRepository(context)
-    
-    OutlinedTextField(
-        value = searchText,
-        onValueChange = { searchText = it },
-        label = { Text("Search city") },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        trailingIcon = {
-            IconButton(onClick = { 
-                if (searchText.isNotBlank()) {
-                    
-                    weatherRepository.getWeatherByCity(searchText) { weatherData, error -> }
-                }
-            }) {
-                Icon(Icons.Default.Search, contentDescription = "Search")
-            }
-        }
-    )
 }
