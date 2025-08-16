@@ -4,12 +4,19 @@
     <string name="current_location">Current location</string>
     <string name="loading">Loading weather data…</string>
     <string name="refresh">Refresh</string>
-    <string name="temperature">Temperature: %1$s°C</string>
-    <string name="feels_like">Feels like: %1$s°C</string>
-    <string name="humidity">Humidity: %1$s%%</string>
-    <string name="wind">Wind: %1$s m/s</string>
-    <string name="description">Description: %1$s</string>
+    <string name="temperature">%.2f°C</string>
+    <string name="feels_like">Feels like: %.2f°C</string>
+    <string name="min_max">Min/max: %1$.2f°C/%2$.2f°C</string>
+    <string name="humidity">Humidity: %d%%</string>
+    <string name="wind">Wind: %.2f m/s</string>
+    <string name="description">Description: %s</string>
+    <string name="sunrise">Sunrise: %s</string>
+    <string name="sunset">Sunset: %s</string>
     <string name="no_location_permission">Location permission is required to get current weather</string>
     <string name="location_error">Unable to get current location</string>
+    <string name="empty_city_name_error">City name cannot be empty</string>
     <string name="network_error">Network error. Please check your connection</string>
+    <string name="get_current_location">Get current location</string>
+    <string name="search">Search</string>
+    <string name="weather_condition_image">Weather condition image</string>
 </resources>
